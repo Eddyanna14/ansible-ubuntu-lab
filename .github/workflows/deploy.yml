@@ -1,4 +1,4 @@
-name: Publicar imagen en Docker Hub
+name: Publicar imagen y desplegar en Render
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  publicar-imagen:
+  publicar-y-desplegar:
     runs-on: ubuntu-latest
 
     steps:
@@ -31,3 +31,12 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/ansible-ubuntu-lab:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/ansible-ubuntu-lab:${{ github.sha }}
+
+      - name: Desplegar imagen en Render
+        run: |
+          curl --fail-with-body --show-error --request POST \
+            "https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}/deploys" \
+            --header "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            --header "Accept: application/json" \
+            --header "Content-Type: application/json" \
+            --data '{"imageUrl":"docker.io/${{ secrets.DOCKERHUB_USERNAME }}/ansible-ubuntu-lab:${{ github.sha }}"}'
